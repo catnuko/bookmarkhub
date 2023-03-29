@@ -1,0 +1,23 @@
+{
+	"compilerOptions": {
+		"strict": true,
+		"baseUrl": ".",
+		"module": "commonjs",
+		"target": "es6",
+		"esModuleInterop": true,
+		"allowJs": true,
+		"sourceMap": false,
+		"rootDir": "src",
+		"outDir": "dist/js",
+		"noEmitOnError": true,
+		"jsx": "react",
+		"typeRoots": ["node_modules/@types"],
+		"paths": {
+			"@/*": ["src/*"]
+		},
+		"types": [
+			"chrome"  
+		]
+	},
+	"exclude": ["node_modules", "dist", "webpack","jest.config.js","postcss.config.js","tailwind.config.js"]
+}
