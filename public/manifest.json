@@ -1,34 +1,38 @@
 {
   "manifest_version": 3,
-
   "name": "Chrome Extension TypeScript Starter",
   "description": "Chrome Extension, TypeScript, Visual Studio Code",
   "version": "1.0",
-
   "options_ui": {
     "page": "options.html"
   },
-
   "action": {
     "default_icon": "icon.png",
-    "default_popup": "popup.html"
+    "default_popup": "popup.html",
+    "default_title": "A Chrome Extension for Bookmark Sync"
   },
-
   "content_scripts": [
-      {
-          "matches": ["<all_urls>"],
-          "js": ["js/vendor.js", "js/content_script.js"]
-      }
+    {
+      "matches": [
+        "<all_urls>"
+      ],
+      "js": [
+        "js/vendor.js",
+        "js/content_script.js"
+      ]
+    }
   ],
-
   "background": {
     "service_worker": "js/background.js"
   },
-
   "permissions": [
-    "storage"
+    "bookmarks",
+    "storage",
+    "notifications",
+    "alarms",
+    "tabs",
+    "background"
   ],
-
   "host_permissions": [
     "<all_urls>"
   ]

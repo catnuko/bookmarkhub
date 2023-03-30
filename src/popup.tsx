@@ -5,56 +5,60 @@ import './assets/css/index.css'
 import { HOME_PAGE } from './constant'
 import { bookmarkManager } from './manager'
 const Popup = () => {
-	const [count, setCount] = useState(0)
-	const [currentURL, setCurrentURL] = useState<string>()
-
 	useEffect(() => {
-		chrome.action.setBadgeText({ text: count.toString() })
-	}, [count])
-
-	useEffect(() => {
-		chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
-			setCurrentURL(tabs[0].url)
-		})
-	}, [])
-
-	const changeBackground = () => {
-		chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
-			const tab = tabs[0]
-			if (tab.id) {
-				chrome.tabs.sendMessage(
-					tab.id,
-					{
-						color: '#555555',
-					},
-					msg => {
-						console.log('result message:', msg)
-					}
-				)
+		chrome.runtime.sendMessage(
+			{
+				type: '获取初始化数据',
+				data: null,
+			},
+			function (response) {
+				console.log('response')
+				console.log(response)
 			}
-		})
-	}
+		)
+	}, [])
+	window.addEventListener('message', function (event) {
+		console.log('event')
+		console.log(event)
+	})
 	const onChange = (e: any) => {
-		console.log(e.target.checked)
+		chrome.runtime.sendMessage({
+			type: '自动同步开关',
+			data: e.target.checked,
+		})
 	}
 	function clickItem(name: any) {
 		switch (name) {
-			case 'sync-from-remote':
+			case '同步一下':
 				bookmarkManager.syncFromRemote()
 				break
-			case 'sync-to-remote':
-				bookmarkManager.syncToRemote()
-				break
-			case 'clear-local':
-				bookmarkManager.clearLocal()
-				break
-			case 'show-options':
-				browser.runtime.openOptionsPage()
-				break
-			case 'help':
-				window.open(HOME_PAGE)
+			case '测试功能':
+				// window.open(HOME_PAGE)
+				// chrome.runtime.sendMessage({
+				// 	type: '获取初始化数据',
+				// 	data: {
+				// 		text: 'text',
+				// 	},
+				// },function(response){
+				// 	console.log("测试功能")
+				// 	console.log(response)
+				// })
+				chrome.runtime.sendMessage({
+					type: '测试功能',
+					data: {
+						text: 'text',
+					},
+				})
+
 				break
 		}
+	}
+	const onInputChange = (e: any) => {
+		console.log(e.target.value)
+		chrome.runtime.sendMessage({
+			type: '设置令牌',
+			data: e.target.checked,
+		})
 	}
 	return (
 		<div className="w-60 p-2 bg-white rounded">
@@ -69,6 +73,17 @@ const Popup = () => {
 				</span>
 			</div>
 			<ul className="w-full p-1 border-t-2 border-gray-200">
+				<li
+					className="flex items-center justify-start w-full p-2 cursor-pointer hover:bg-gray-100 duration-300 rounded font-mono hover:font-bold"
+					onClick={e => clickItem('同步一下')}
+				>
+					<Icon
+						icon="ic:outline-cloud-upload"
+						className="mr-5 w-6 h-6"
+						color="#20aeff"
+					></Icon>
+					<span className="text-base ">同步一下</span>
+				</li>
 				<li className="flex items-center justify-between w-full p-2 cursor-pointer hover:bg-gray-100 duration-300 rounded font-mono hover:font-bold">
 					<div className="flex items-center justify-between">
 						<Icon
@@ -86,31 +101,45 @@ const Popup = () => {
 						onChange={onChange}
 					/>
 				</li>
-				<li className="flex items-center justify-start w-full p-2 cursor-pointer hover:bg-gray-100 duration-300 rounded font-mono hover:font-bold">
-					<Icon
-						icon="ic:outline-cloud-upload"
-						className="mr-5 w-6 h-6"
-						color="#20aeff"
-					></Icon>
-					<span className="text-base ">上传到云端</span>
-				</li>
-				<li className="flex items-center justify-start w-full p-2 cursor-pointer hover:bg-gray-100 duration-300 rounded font-mono hover:font-bold">
-					<Icon
-						icon="ic:outline-cloud-download"
-						className="mr-5 w-6 h-6"
-						color="#20aeff"
-					></Icon>
-					<span className="text-base ">下载到本地</span>
-				</li>
-				<li className="flex items-center justify-start w-full p-2 cursor-pointer hover:bg-gray-100 duration-300 rounded font-mono hover:font-bold">
+				<li
+					className="flex items-center justify-start w-full p-2 cursor-pointer hover:bg-gray-100 duration-300 rounded font-mono hover:font-bold"
+					onClick={e => clickItem('设置')}
+				>
 					<Icon
 						icon="ep:setting"
 						className="mr-5 w-6 h-6"
 						color="#20aeff"
 					></Icon>
-					<span className="text-base ">设置</span>
+					<input
+						type="password"
+						name="street-address"
+						id="street-address"
+						autoComplete="street-address"
+						onChange={onInputChange}
+						className="p-2 block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
+					/>
+				</li>
+				<li
+					className="flex items-center justify-start w-full p-2 cursor-pointer hover:bg-gray-100 duration-300 rounded font-mono hover:font-bold"
+					onClick={e => clickItem('测试功能')}
+				>
+					<Icon
+						icon="ep:setting"
+						className="mr-5 w-6 h-6"
+						color="#20aeff"
+					></Icon>
+					<span>测试数据</span>
 				</li>
 			</ul>
+			<div className="flex items-center justify-start p-2 cursor-pointer divide-x divide-gray-100">
+				<Icon
+					icon="mdi:github"
+					className="w-6 h-6"
+					onClick={e => {
+						window.open(HOME_PAGE)
+					}}
+				/>
+			</div>
 		</div>
 	)
 }

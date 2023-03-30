@@ -15,9 +15,14 @@
 		"paths": {
 			"@/*": ["src/*"]
 		},
-		"types": [
-			"chrome"  
-		]
+		"types": ["chrome", "react", "react-dom", "jest"]
 	},
-	"exclude": ["node_modules", "dist", "webpack","jest.config.js","postcss.config.js","tailwind.config.js"]
+	"exclude": [
+		"node_modules",
+		"dist",
+		"webpack",
+		"jest.config.js",
+		"postcss.config.js",
+		"tailwind.config.js"
+	]
 }
