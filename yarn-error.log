@@ -1,0 +1,75 @@
+Arguments: 
+  C:\Program Files\nodejs\node.exe C:\Users\Administrator\AppData\Roaming\npm\node_modules\yarn\bin\yarn.js add lodash
+
+PATH: 
+  C:\Program Files (x86)\Common Files\Oracle\Java\javapath;C:\Windows\system32;C:\Windows;C:\Windows\System32\Wbem;C:\Windows\System32\WindowsPowerShell\v1.0\;C:\Windows\System32\OpenSSH\;C:\Program Files\Go\bin;C:\Program Files\Git\cmd;C:\Program Files (x86)\NVIDIA Corporation\PhysX\Common;C:\ProgramData\chocolatey\bin;C:\Program Files\dotnet\;C:\Program Files (x86)\NetSarang\Xshell 7\;C:\Program Files (x86)\NetSarang\Xftp 7\;C:\Users\Administrator\AppData\Roaming\nvm;C:\Program Files\nodejs;C:\Users\Administrator\.cargo\bin;C:\Users\Administrator\AppData\Local\Microsoft\WindowsApps;C:\Users\Administrator\AppData\Local\Programs\Microsoft VS Code\bin;C:\Users\Administrator\go\bin;C:\Program Files\Go\bin;C:\Users\Administrator\AppData\Roaming\npm;C:\Program Files\hugo;C:\tools\dart-sdk\bin;C:\Users\Administrator\AppData\Roaming\Pub\Cache\bin;C:\Users\Administrator\fvm\default\bin;C:\Users\Administrator\AppData\Local\Yarn\bin;C:\Users\Administrator\AppData\Roaming\nvm;C:\Program Files\nodejs;C:\Users\Administrator\AppData\Local\Android\Sdk\platform-tools;C:\Program Files\Android\Android Studio\jre\bin;C:\Program Files\Microsoft Visual Studio\2022\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin;C:\ProgramData\chocolatey\lib\deno;
+
+Yarn version: 
+  1.22.19
+
+Node version: 
+  18.12.1
+
+Platform: 
+  win32 x64
+
+Trace: 
+  Error: ENOENT: no such file or directory, copyfile 'C:\Users\Administrator\AppData\Local\Yarn\Cache\v6\npm-glob-parent-6.0.2-6d237d99083950c79290f24c7642a3de9a28f9e3-integrity\node_modules\glob-parent\LICENSE' -> 'D:\code\taihe\bookmarkhub\node_modules\copy-webpack-plugin\node_modules\glob-parent\LICENSE'
+
+npm manifest: 
+  {
+    "name": "chrome-extension-typescript-starter",
+    "version": "1.0.0",
+    "description": "chrome-extension-typescript-starter",
+    "main": "index.js",
+    "scripts": {
+      "watch": "webpack --config webpack/webpack.dev.js --watch",
+      "build": "webpack --config webpack/webpack.prod.js",
+      "clean": "rimraf dist",
+      "test": "npx jest",
+      "style": "prettier --write \"src/**/*.{ts,tsx}\""
+    },
+    "author": "",
+    "license": "MIT",
+    "repository": {
+      "type": "git",
+      "url": "https://github.com/chibat/chrome-extension-typescript-starter.git"
+    },
+    "dependencies": {
+      "@iconify/react": "^4.1.0",
+      "axios": "^1.3.4",
+      "react": "^18.2.0",
+      "react-dom": "^18.2.0"
+    },
+    "devDependencies": {
+      "@types/chrome": "0.0.158",
+      "@types/jest": "^27.0.2",
+      "@types/react": "^18.0.29",
+      "@types/react-dom": "^18.0.11",
+      "autoprefixer": "^10.4.14",
+      "copy-webpack-plugin": "^9.0.1",
+      "css-loader": "^6.7.3",
+      "glob": "^7.1.6",
+      "jest": "^27.2.1",
+      "postcss": "^8.4.21",
+      "postcss-loader": "^7.1.0",
+      "postcss-preset-env": "^8.2.0",
+      "prettier": "^2.2.1",
+      "rimraf": "^3.0.2 ",
+      "style-loader": "^3.3.2",
+      "tailwindcss": "^3.3.0",
+      "ts-jest": "^27.0.5",
+      "ts-loader": "^8.0.0",
+      "typescript": "^4.4.3 ",
+      "url-loader": "^4.1.1",
+      "webpack": "^5.76.0",
+      "webpack-cli": "^4.0.0",
+      "webpack-merge": "^5.0.0"
+    }
+  }
+
+yarn manifest: 
+  No manifest
+
+Lockfile: 
+  No lockfile

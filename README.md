@@ -1,70 +1,15 @@
-# Chrome Extension TypeScript Starter
+# bookmarkhub
+跨浏览器书签自动同步（尚在实验阶段）
 
-![build](https://github.com/chibat/chrome-extension-typescript-starter/workflows/build/badge.svg)
+## 📑文档
+1. 安装插件
+2. 获取并填写github accessToken
+3. 开启自动同步
 
-Chrome Extension, TypeScript and Visual Studio Code
+## 🚀特性
+* 使用github gist同步，不担心服务器过期书签数据丢失
+* 可开启自动同步
+* 可解决多端书签冲突问题
 
-## Prerequisites
-
-* [node + npm](https://nodejs.org/) (Current Version)
-
-## Option
-
-* [Visual Studio Code](https://code.visualstudio.com/)
-
-## Includes the following
-
-* TypeScript
-* Webpack
-* React
-* Jest
-* Example Code
-    * Chrome Storage
-    * Options Version 2
-    * content script
-    * count up badge number
-    * background
-
-## Project Structure
-
-* src/typescript: TypeScript source files
-* src/assets: static files
-* dist: Chrome Extension directory
-* dist/js: Generated JavaScript files
-
-## Setup
-
-```
-npm install
-```
-
-## Import as Visual Studio Code project
-
-...
-
-## Build
-
-```
-npm run build
-```
-
-## Build in watch mode
-
-### terminal
-
-```
-npm run watch
-```
-
-### Visual Studio Code
-
-Run watch mode.
-
-type `Ctrl + Shift + B`
-
-## Load extension to chrome
-
-Load `dist` directory
-
-## Test
-`npx jest` or `npm run test`
+## 🖼️截图
+![🖼️截图](./screenshot/jietu.png)

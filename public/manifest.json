@@ -4,6 +4,7 @@
   "description": "Chrome Extension, TypeScript, Visual Studio Code",
   "version": "1.0",
   "options_ui": {
+    "open_in_tab": true,
     "page": "options.html"
   },
   "action": {

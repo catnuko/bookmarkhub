@@ -3,93 +3,121 @@ import React, { useEffect, useState } from 'react'
 import { createRoot } from 'react-dom/client'
 import './assets/css/index.css'
 import { HOME_PAGE } from './constant'
-import { bookmarkManager } from './manager'
+
+import {
+	MsgInitedData,
+	PopupState,
+	BackgroundEvent,
+	SyncStatus,
+	sendMsg,
+} from './type'
+const SUCCESS = 'emojione-v1:left-check-mark'
+const LOADING = 'eos-icons:loading'
+const ERROR = 'material-symbols:error-outline'
+
 const Popup = () => {
-	useEffect(() => {
-		chrome.runtime.sendMessage(
-			{
-				type: '获取初始化数据',
-				data: null,
-			},
-			function (response) {
-				console.log('response')
-				console.log(response)
-			}
-		)
-	}, [])
-	window.addEventListener('message', function (event) {
-		console.log('event')
-		console.log(event)
+	const [initedData, setInitedData] = useState<PopupState>({
+		autoSync: false,
+		isSyncing: false,
+		accessToken: '',
+		gistStatus: '未设置',
 	})
-	const onChange = (e: any) => {
-		chrome.runtime.sendMessage({
-			type: '自动同步开关',
-			data: e.target.checked,
+	const [syncStatus, setSyncStatus] = useState<SyncStatus>('未同步')
+	const [errorMsg, setErrorMsg] = useState('')
+	useEffect(() => {
+		sendMsg(BackgroundEvent.获取初始化数据)
+		chrome.runtime.onMessage.addListener(function (
+			request,
+			sender,
+			sendResponse
+		) {
+			console.log('popup:', request.type, request.data)
+			let data = request.data
+			switch (request.type) {
+				case BackgroundEvent.获取初始化数据:
+					if (data) {
+						setInitedData({
+							...initedData,
+							...data,
+						})
+						clickItem('同步一下')
+					}
+					break
+				case BackgroundEvent.已同步:
+					setSyncStatus('已同步')
+					break
+				case BackgroundEvent.出现冲突:
+					setSyncStatus('同步错误')
+					setErrorMsg('出现冲突')
+					break
+				case BackgroundEvent.同步错误:
+					setSyncStatus('同步错误')
+					setErrorMsg(data)
+					break
+				default:
+					break
+			}
 		})
+	}, [])
+	const onAutoSyncChange = (e: any) => {
+		setInitedData((v: PopupState) => ({
+			...v,
+			autoSync: e.target.checked,
+		}))
+		sendMsg(BackgroundEvent.自动同步开关, e.target.checked)
 	}
 	function clickItem(name: any) {
 		switch (name) {
 			case '同步一下':
-				bookmarkManager.syncFromRemote()
+				sendMsg(BackgroundEvent.同步一下)
+				setSyncStatus('正在同步')
 				break
 			case '测试功能':
-				// window.open(HOME_PAGE)
-				// chrome.runtime.sendMessage({
-				// 	type: '获取初始化数据',
-				// 	data: {
-				// 		text: 'text',
-				// 	},
-				// },function(response){
-				// 	console.log("测试功能")
-				// 	console.log(response)
-				// })
 				chrome.runtime.sendMessage({
-					type: '测试功能',
-					data: {
-						text: 'text',
-					},
+					type: BackgroundEvent.测试功能,
 				})
 
 				break
 		}
 	}
-	const onInputChange = (e: any) => {
-		console.log(e.target.value)
-		chrome.runtime.sendMessage({
-			type: '设置令牌',
-			data: e.target.checked,
-		})
+	const onGistInputChange = (e: any) => {
+		setInitedData((v: PopupState) => ({
+			...v,
+			accessToken: e.target.value,
+		}))
+		sendMsg(BackgroundEvent.设置令牌, e.target.value)
 	}
 	return (
-		<div className="w-60 p-2 bg-white rounded">
-			<div className="flex items-center justify-start p-2 cursor-pointer">
+		<div className="p-2 bg-white rounded" style={{ width: '400px' }}>
+			<div className="flex items-center justify-center p-1 cursor-pointer">
 				<Icon
 					icon="material-symbols:bookmark-add-outline"
-					className="w-12 h-12 mr-5"
-					color="#20aeff"
+					className="w-12 h-12 mr-3"
 				/>
-				<span className="text-xl font-bold font-mono" color="#20aeff">
-					书签仓库
-				</span>
+				<span className="text-xl font-bold">书签仓库</span>
 			</div>
-			<ul className="w-full p-1 border-t-2 border-gray-200">
+			<ul className="w-full p-1 border-t-2 border-gray-100">
 				<li
-					className="flex items-center justify-start w-full p-2 cursor-pointer hover:bg-gray-100 duration-300 rounded font-mono hover:font-bold"
+					className="flex items-center justify-between w-full p-2 cursor-pointer duration-300 rounded hover:bg-purple-800 hover:text-white"
 					onClick={e => clickItem('同步一下')}
 				>
-					<Icon
-						icon="ic:outline-cloud-upload"
-						className="mr-5 w-6 h-6"
-						color="#20aeff"
-					></Icon>
-					<span className="text-base ">同步一下</span>
+					<div className="flex items-center justify-between">
+						<Icon
+							icon="ic:outline-cloud-upload"
+							className="mr-5 w-6 h-6"
+						></Icon>
+						<span className="text-base ">同步一下</span>
+					</div>
+					<RenderSyncIcon
+						syncStatus={syncStatus}
+						errorMsg={errorMsg}
+					></RenderSyncIcon>
 				</li>
-				<li className="flex items-center justify-between w-full p-2 cursor-pointer hover:bg-gray-100 duration-300 rounded font-mono hover:font-bold">
+				<li className="flex items-center justify-between w-full p-2 cursor-pointer duration-300 rounded hover:bg-purple-800 hover:text-white">
 					<div className="flex items-center justify-between">
 						<Icon
 							icon="material-symbols:astrophotography-auto"
-							color="#20aeff"
-							className="mr-5 w-6 h-6"
+							className="w-6 h-6 mr-5"
 						></Icon>
 						<span className="text-base ">自动同步</span>
 					</div>
@@ -98,40 +126,56 @@ const Popup = () => {
 						type="checkbox"
 						role="switch"
 						id="flexSwitchCheckDefault01"
-						onChange={onChange}
+						checked={initedData.autoSync}
+						onChange={onAutoSyncChange}
 					/>
 				</li>
+				<li className="flex items-center justify-between w-full p-2 cursor-pointer duration-300 rounded hover:bg-purple-800 hover:text-white">
+					<div className="flex items-center justify-between">
+						<Icon
+							icon="material-symbols:astrophotography-auto"
+							className="w-6 h-6 mr-5"
+						></Icon>
+						<select
+							id="country"
+							name="country"
+							autoComplete="country-name"
+							className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:max-w-xs sm:text-sm sm:leading-6"
+						>
+							<option>按本地同步</option>
+							<option>按远程同步</option>
+						</select>
+					</div>
+				</li>
 				<li
-					className="flex items-center justify-start w-full p-2 cursor-pointer hover:bg-gray-100 duration-300 rounded font-mono hover:font-bold"
+					className="flex items-center justify-between w-full p-2 cursor-pointer duration-300 rounded hover:bg-purple-800 hover:text-white"
 					onClick={e => clickItem('设置')}
 				>
-					<Icon
-						icon="ep:setting"
-						className="mr-5 w-6 h-6"
-						color="#20aeff"
-					></Icon>
-					<input
-						type="password"
-						name="street-address"
-						id="street-address"
-						autoComplete="street-address"
-						onChange={onInputChange}
-						className="p-2 block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
-					/>
+					<div className="flex items-center justify-between">
+						<Icon icon="ep:setting" className="mr-5 w-6 h-6">
+							Github AccessToken
+						</Icon>
+						<input
+							type="password"
+							name="street-address"
+							id="street-address"
+							autoComplete="street-address"
+							value={initedData.accessToken}
+							onChange={onGistInputChange}
+							className="p-2 block rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
+						/>
+					</div>
+					<Icon icon={LOADING} />
 				</li>
 				<li
-					className="flex items-center justify-start w-full p-2 cursor-pointer hover:bg-gray-100 duration-300 rounded font-mono hover:font-bold"
+					className="flex items-center justify-start w-full p-2 cursor-pointer duration-300 rounded hover:bg-purple-800 hover:text-white"
 					onClick={e => clickItem('测试功能')}
 				>
-					<Icon
-						icon="ep:setting"
-						className="mr-5 w-6 h-6"
-						color="#20aeff"
-					></Icon>
+					<Icon icon="ep:setting" className="mr-5 w-6 h-6"></Icon>
 					<span>测试数据</span>
 				</li>
 			</ul>
-			<div className="flex items-center justify-start p-2 cursor-pointer divide-x divide-gray-100">
+			<div className="flex items-center justify-start p-2 cursor-pointer border-t-2 border-gray-100">
 				<Icon
 					icon="mdi:github"
 					className="w-6 h-6"
@@ -143,11 +187,44 @@ const Popup = () => {
 		</div>
 	)
 }
-
+const RenderSyncIcon = (props: {
+	syncStatus: SyncStatus
+	errorMsg: string
+}) => {
+	const { syncStatus, errorMsg } = props
+	const onClick = () => {
+		if (syncStatus === '同步错误') {
+			chrome.runtime.openOptionsPage()
+		}
+	}
+	if (syncStatus === '未同步') return null
+	else {
+		let icon =
+			syncStatus === '正在同步'
+				? LOADING
+				: syncStatus === '已同步'
+				? SUCCESS
+				: ERROR
+		if (icon === ERROR) {
+			return (
+				<div className="flex items-center justify-end" onClick={onClick}>
+					<Icon icon={icon} className="w-4 h-4" />
+					<span className="truncate text-sm text-orange-400">{errorMsg}</span>
+				</div>
+			)
+		} else {
+			return (
+				<div className="flex items-center justify-end" onClick={onClick}>
+					<div className="mr-3">{syncStatus}</div>
+					<Icon icon={icon} className="w-4 h-4" />
+					<span className="truncate text-sm text-slate-400">
+						2022-12-30 15:41
+					</span>
+				</div>
+			)
+		}
+	}
+}
 const root = createRoot(document.getElementById('root')!)
 
-root.render(
-	<React.StrictMode>
-		<Popup />
-	</React.StrictMode>
-)
+root.render(<Popup />)

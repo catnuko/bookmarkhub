@@ -1,78 +1,147 @@
+import { cloneDeep } from 'lodash'
+import BookMark from './bookmarkManager/BookmarkManager'
+import { MsgInitedData, BackgroundEvent, sendMsg } from './type'
 import storage from './utils/storage'
-
 function polling() {
 	// console.log("polling");
 	setTimeout(polling, 1000 * 30)
 }
 
 polling()
-chrome.bookmarks.onChanged.addListener(function (id, changeInfo) {
+let bookmarkManager: BookMark
+let bookmarkManagerPromise: Promise<BookMark>
+let bookmarkManagerResolve: (value: BookMark) => void
+let bookmarkManagerReject: (reason?: any) => void
+bookmarkManagerPromise = new Promise((resolve, reject) => {
+	bookmarkManagerResolve = resolve
+	bookmarkManagerReject = reject
+})
+async function onChange() {
+	bookmarkManager = await bookmarkManagerPromise
+	await bookmarkManager.syncToRemote()
+	sendMsg(BackgroundEvent.已同步)
+}
+chrome.bookmarks.onChanged.addListener(async function (id, changeInfo) {
 	console.log('onChanged', id, changeInfo)
+	onChange()
 })
-chrome.bookmarks.onCreated.addListener(function (id, bookmark) {
+chrome.bookmarks.onCreated.addListener(async function (id, bookmark) {
 	console.log('onCreated', id, bookmark)
-})
-chrome.bookmarks.onMoved.addListener(function (id, moveInfo) {
-	console.log('onMoved', id, moveInfo)
-})
-chrome.bookmarks.onRemoved.addListener(function (id, removeInfo) {
-	console.log('onRemoved', id, removeInfo)
-})
-chrome.bookmarks.onChildrenReordered.addListener(function (id, reorderInfo) {
-	console.log('onChildrenReordered', id, reorderInfo)
+	onChange()
 })
 
+chrome.bookmarks.onMoved.addListener(async function (id, moveInfo) {
+	console.log('onMoved', id, moveInfo)
+	onChange()
+})
+chrome.bookmarks.onRemoved.addListener(async function (id, removeInfo) {
+	console.log('onRemoved', id, removeInfo)
+	onChange()
+})
+chrome.bookmarks.onChildrenReordered.addListener(async function (
+	id,
+	reorderInfo
+) {
+	console.log('onChildrenReordered', id, reorderInfo)
+	onChange()
+})
+chrome.runtime.onConnect.addListener(function (port) {
+	console.log(port)
+})
 chrome.runtime.onMessage.addListener(async function (
 	request,
 	sender,
 	sendResponse
 ) {
 	let data = request.data
-	console.log('onMessage', request)
+	console.log('background:', request.type, request.data)
+	let initedData: MsgInitedData
 	switch (request.type) {
-		case '同步一下':
-			sendResponse('ok')
+		case BackgroundEvent.同步一下:
+			initedData = await initData()
+			if (!initedData.accessToken) {
+				sendMsg(BackgroundEvent.同步错误, '请先设置令牌')
+				return
+			}
+			try {
+				bookmarkManager = await bookmarkManagerPromise
+				let res = await bookmarkManager.compareDiff()
+				if (res) {
+					sendMsg(BackgroundEvent.已同步)
+				} else {
+					sendMsg(BackgroundEvent.出现冲突)
+				}
+			} catch (error) {
+				sendMsg(BackgroundEvent.同步错误, JSON.stringify(error))
+				console.error(error)
+			}
 			break
-		case '设置令牌':
-			storage.setItem('gistToken', data)
-			sendResponse('ok')
-			break
-		case '自动同步开关':
-			storage.setItem('autoSync', data)
-			sendResponse('ok')
-			break
-		case '获取初始化数据':
-			await initData(sendResponse)
-			break
-		case '测试功能':
-			const initedData = await initData(sendResponse)
-			let popup = await chrome.windows.getCurrent()
-			console.log(popup)
-			chrome.runtime.sendMessage(popup.id + '', initedData, function (response) {
-				console.log(response)
+		case BackgroundEvent.GetConflictArray:
+			bookmarkManagerPromise.then(bookmarkManager => {
+				console.log('bookmarkManager')
+				console.log(bookmarkManager)
+				sendMsg(BackgroundEvent.ReturnConflictArray, {
+					localBookMark: cloneDeep(bookmarkManager.localBookMark),
+					remoteBookMark: cloneDeep(bookmarkManager.remoteBookMark),
+				})
 			})
+		case BackgroundEvent.设置令牌:
+			initedData = await initData()
+			initedData.accessToken = data
+			setInitedData(initedData)
+			break
+		case BackgroundEvent.自动同步开关:
+			initedData = await initData()
+			initedData.autoSync = data
+			setInitedData(initedData)
+			break
+		case BackgroundEvent.MergeConflict:
+			let newTreeData = data
+			bookmarkManager = await bookmarkManagerPromise
+			bookmarkManager.syncToRemote(newTreeData)
+			break
+		case BackgroundEvent.获取初始化数据:
+			initedData = await initData()
+			console.log('background:initedData', initedData)
+			sendMsg(BackgroundEvent.获取初始化数据, initedData)
+			bookmarkManager = new BookMark(initedData)
+			bookmarkManagerResolve(bookmarkManager)
+			break
+		case BackgroundEvent.测试功能:
+			bookmarkManager = await bookmarkManagerPromise
+			bookmarkManager.syncToLocal()
+			// let res = await bookmarkManager.compareDiff()
+			// chrome.bookmarks.getTree((a: any) => console.log(a))
+
 			break
 		default:
 			break
 	}
 })
-
-async function initData(sendResponse: (response?: any) => void) {
-	let pl = [
-		storage.getItem('autoSync').then(autoSync => {
-			if (autoSync === null) {
-				storage.setItem('autoSync', true)
-				return true
-			} else {
-				return autoSync
-			}
-		}),
-	]
-	const resList = await Promise.all(pl)
-	const initData = {
-		autoSync: resList[0],
+function getItem<T>(key: string, defaultValue: T) {
+	return storage.getItem(key).then(value => {
+		if (!value) {
+			storage.setItem(key, defaultValue)
+			return defaultValue
+		} else {
+			return value
+		}
+	})
+}
+async function setInitedData(data: MsgInitedData) {
+	return storage.setItem('initedData', data)
+}
+async function initData(): Promise<MsgInitedData> {
+	const initedData = await getItem<MsgInitedData>('initedData', {
+		autoSync: true,
+		accessToken: '',
+		gistStatus: '未设置',
+	})
+	if (!initedData.accessToken) {
+		initedData.accessToken = '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'
 	}
-	sendResponse(initData)
+	setInitedData(initedData)
+	return initedData
 }
 
 // // 获取所有 tab
@@ -84,3 +153,15 @@ async function initData(sendResponse: (response?: any) => void) {
 // if (pups.length) {
 //     console.log(pups[0].location.href)
 // }
+
+// // 获取当前激活的tab
+// chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
+// 	console.log('bg:tabs')
+// 	console.log(tabs)
+// 	// 发送消息到当前tab
+// 	if (tabs[0]?.id) {
+// 		chrome.tabs.sendMessage(tabs[0].id, {
+// 			greeting: 'Hello from background!',
+// 		})
+// 	}
+// })
