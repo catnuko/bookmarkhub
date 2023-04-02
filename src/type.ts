@@ -14,6 +14,8 @@ export enum BackgroundEvent {
 	'GetConflictArray' = 'GetConflictArray',
 	'ReturnConflictArray' = 'ReturnConflictArray',
 	'MergeConflict' = 'MergeConflict',
+	'CheckAccessToken' = 'CheckAccessToken',//检查令牌是否合法，由popup发起
+	'ReturnCheckAccessToken' = 'ReturnCheckAccessToken',//返回令牌是否合法，由background发起
 	'同步一下' = '同步一下',
 	'设置令牌' = '设置令牌',
 	'自动同步开关' = '自动同步开关',

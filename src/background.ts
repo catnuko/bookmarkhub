@@ -65,14 +65,14 @@ chrome.runtime.onMessage.addListener(async function (
 			}
 			try {
 				bookmarkManager = await bookmarkManagerPromise
-				let res = await bookmarkManager.compareDiff()
+				let res = await bookmarkManager.hasDiff()
 				if (res) {
-					sendMsg(BackgroundEvent.已同步)
-				} else {
 					sendMsg(BackgroundEvent.出现冲突)
+				} else {
+					sendMsg(BackgroundEvent.已同步)
 				}
 			} catch (error) {
-				sendMsg(BackgroundEvent.同步错误, JSON.stringify(error))
+				sendMsg(BackgroundEvent.同步错误, '同步错误，请联系管理员')
 				console.error(error)
 			}
 			break
@@ -95,10 +95,11 @@ chrome.runtime.onMessage.addListener(async function (
 			initedData.autoSync = data
 			setInitedData(initedData)
 			break
+		//option页面发来的消息,用于合并冲突
 		case BackgroundEvent.MergeConflict:
 			let newTreeData = data
 			bookmarkManager = await bookmarkManagerPromise
-			bookmarkManager.syncToRemote(newTreeData)
+			bookmarkManager.mergeConflict(newTreeData)
 			break
 		case BackgroundEvent.获取初始化数据:
 			initedData = await initData()
@@ -110,9 +111,11 @@ chrome.runtime.onMessage.addListener(async function (
 		case BackgroundEvent.测试功能:
 			bookmarkManager = await bookmarkManagerPromise
 			bookmarkManager.syncToLocal()
-			// let res = await bookmarkManager.compareDiff()
-			// chrome.bookmarks.getTree((a: any) => console.log(a))
-
+			break
+		case BackgroundEvent.CheckAccessToken:
+			bookmarkManager = await bookmarkManagerPromise
+			let res = await bookmarkManager.checkAccessToken()
+			sendMsg(BackgroundEvent.ReturnCheckAccessToken, res)
 			break
 		default:
 			break
@@ -138,7 +141,7 @@ async function initData(): Promise<MsgInitedData> {
 		gistStatus: '未设置',
 	})
 	if (!initedData.accessToken) {
-		initedData.accessToken = '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'
+		initedData.accessToken = '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'
 	}
 	setInitedData(initedData)
 	return initedData

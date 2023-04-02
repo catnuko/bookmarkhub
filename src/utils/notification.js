@@ -27,7 +27,8 @@ export async function close (id) {
 }
 
 export async function showNotification (msg, delayTime = 5000) {
-  window.alert(msg);
+  console.error(msg)
+  // window.alert(msg);
   /* const msgId = await open(msg);
   await delay(delayTime);
   close(msgId); */

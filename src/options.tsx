@@ -7,28 +7,10 @@ import 'antd/dist/reset.css'
 import { diffTree, traverseTree, filterTree } from './bookmarkManager/diffTree'
 import cloneDeep from 'lodash/cloneDeep'
 import remove from 'lodash/remove'
+import DiffBookMark from './bookmarkManager/DiffBookMark'
 const TreeNode = Tree.TreeNode
-export class DiffBookMark {
-	localBookMark: MyBookMark = { bookmarks: [] }
-	remoteBookMark: MyBookMark = { bookmarks: [] }
-	conflictArray?: BookMarks
-	constructor(localBookMark: MyBookMark, remoteBookMark: MyBookMark) {
-		this.localBookMark = localBookMark
-		this.remoteBookMark = remoteBookMark
-	}
-	getDif() {
-		if (!this.conflictArray) {
-			this.conflictArray = diffTree(
-				this.localBookMark.bookmarks,
-				this.remoteBookMark.bookmarks
-			)
-		}
-		let cloned = cloneDeep(this.conflictArray)
-		return cloned
-	}
-}
 const Options = () => {
-	let [treeData, setTreeData] = useState<any>([])
+	let [treeData, setTreeData] = useState<BookMarks>([])
 	let diffBookMark = useRef<DiffBookMark>()
 	useEffect(() => {
 		sendMsg(BackgroundEvent.GetConflictArray)

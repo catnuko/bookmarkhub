@@ -8,6 +8,9 @@ import {
 	MsgInitedData,
 	sendMsg,
 } from '../type'
+import { cloneDeep, update } from 'lodash'
+import DiffBookMark from './DiffBookMark'
+import { traverseTree } from './diffTree'
 export default class BookMark {
 	localBookMark: MyBookMark = { bookmarks: [] }
 	remoteBookMark: MyBookMark = { bookmarks: [] }
@@ -15,28 +18,39 @@ export default class BookMark {
 		//初始化axios
 		Api.setAccessToken(initedData.accessToken)
 	}
-
-	isSync = false
-	async compareDiff() {
-		this.isSync = true
+	async hasDiff() {
 		await this.setLocalBookMark()
 		await this.setRemoteBookmark()
 		console.log(this.localBookMark, this.remoteBookMark)
-		if (!equalBookmark(this.localBookMark, this.remoteBookMark)) {
-			return false
-		}
-		return true
+		let dif = new DiffBookMark(this.localBookMark, this.remoteBookMark)
+		let difarray = dif.getDif()
+		let hasDiff = false
+		traverseTree(difarray, (node: any) => {
+			if (node._type !== 'equal' && !hasDiff) {
+				hasDiff = true
+			}
+		})
+		return hasDiff
+	}
+	async mergeConflict(bookmarks: BookMarks) {
+		clearLocal(this.localBookMark)
+		this.setLocalBookMark(bookmarks)
+		createLocal(this.localBookMark)
+		await updateRemoteBookmark(this.localBookMark)
+		await this.setRemoteBookmark()
 	}
 	//同步到远端
 	async syncToRemote(bookmarks?: BookMarks) {
 		this.setLocalBookMark(bookmarks)
-		await this.updateRemoteBookmark(this.localBookMark)
+		await updateRemoteBookmark(this.localBookMark)
+		await this.setRemoteBookmark()
 	}
 	//将远端书签同步到本地
 	async syncToLocal() {
 		this.setRemoteBookmark()
 		clearLocal(this.localBookMark)
 		createLocal(this.remoteBookMark)
+		this.localBookMark = cloneDeep(this.remoteBookMark)
 	}
 	//设置localBookMark,如果传入bookmarks则直接使用，否则从本地获取
 	async setLocalBookMark(bookmarks?: BookMarks) {
@@ -54,8 +68,13 @@ export default class BookMark {
 		const bookmarks = (await Gist.fetch()) as MyBookMark
 		this.remoteBookMark = bookmarks
 	}
-	async updateRemoteBookmark(bookmarks: MyBookMark) {
-		await Gist.update(JSON.stringify(bookmarks, null, 2))
+	async checkAccessToken() {
+		try {
+			await Gist.fetchGists()
+			return true
+		} catch (error) {
+			return false
+		}
 	}
 }
 export function equalBookmark(a: MyBookMark, b: MyBookMark) {
@@ -64,14 +83,14 @@ export function equalBookmark(a: MyBookMark, b: MyBookMark) {
 	const res = aa === bb
 	return res
 }
-
+export async function updateRemoteBookmark(bookmarks: MyBookMark) {
+	await Gist.update(JSON.stringify(bookmarks, null, 2))
+}
 //清空本地的书签
 async function clearLocal(myBookMark: MyBookMark) {
 	if (myBookMark.bookmarks[0].children && myBookMark.bookmarks[0].children[0]) {
 		let shuQianLanNode = myBookMark.bookmarks[0].children[0]
-		return shuQianLanNode.children?.map(node =>
-			bookmarkUtils.create(node, shuQianLanNode.id)
-		)
+		return shuQianLanNode.children?.map(node => bookmarkUtils.remove(node))
 	} else {
 		console.error('localBookMark.bookmarks[0].children is undefined')
 		return Promise.reject()

@@ -37,7 +37,7 @@ export async function setAccessToken(accessToken) {
 
 const commonHeaders = () => ({
 	'Content-Type': 'application/json;charset=UTF-8',
-	Authorization: `token ${access_token || ''}`,
+	Authorization: `bearer ${access_token || ''}`,
 	Accept:
 		store === 'github' ? 'application/vnd.github.v3+json' : 'application/json',
 })

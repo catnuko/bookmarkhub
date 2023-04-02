@@ -24,8 +24,10 @@ const Popup = () => {
 	})
 	const [syncStatus, setSyncStatus] = useState<SyncStatus>('未同步')
 	const [errorMsg, setErrorMsg] = useState('')
+	const [accessTokenStatus, setAccessTokenStatus] = useState(false)
 	useEffect(() => {
 		sendMsg(BackgroundEvent.获取初始化数据)
+		sendMsg(BackgroundEvent.CheckAccessToken)
 		chrome.runtime.onMessage.addListener(function (
 			request,
 			sender,
@@ -53,6 +55,9 @@ const Popup = () => {
 				case BackgroundEvent.同步错误:
 					setSyncStatus('同步错误')
 					setErrorMsg(data)
+					break
+				case BackgroundEvent.ReturnCheckAccessToken:
+					setAccessTokenStatus(data)
 					break
 				default:
 					break
@@ -130,7 +135,7 @@ const Popup = () => {
 						onChange={onAutoSyncChange}
 					/>
 				</li>
-				<li className="flex items-center justify-between w-full p-2 cursor-pointer duration-300 rounded hover:bg-purple-800 hover:text-white">
+				{/* <li className="flex items-center justify-between w-full p-2 cursor-pointer duration-300 rounded hover:bg-purple-800 hover:text-white">
 					<div className="flex items-center justify-between">
 						<Icon
 							icon="material-symbols:astrophotography-auto"
@@ -146,7 +151,7 @@ const Popup = () => {
 							<option>按远程同步</option>
 						</select>
 					</div>
-				</li>
+				</li> */}
 				<li
 					className="flex items-center justify-between w-full p-2 cursor-pointer duration-300 rounded hover:bg-purple-800 hover:text-white"
 					onClick={e => clickItem('设置')}
@@ -165,7 +170,14 @@ const Popup = () => {
 							className="p-2 block rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
 						/>
 					</div>
-					<Icon icon={LOADING} />
+					{accessTokenStatus ? (
+						<Icon icon={SUCCESS} />
+					) : (
+						<div className='flex items-center justify-start'>
+							<Icon icon={ERROR} className="mr-1 w-6 h-6"/>
+							<span>AccessToken非法</span>
+						</div>
+					)}
 				</li>
 				<li
 					className="flex items-center justify-start w-full p-2 cursor-pointer duration-300 rounded hover:bg-purple-800 hover:text-white"
