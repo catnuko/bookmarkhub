@@ -1,6 +1,7 @@
 import bookmarkUtils from '../utils/bookmark.js'
 import * as Api from '../utils/api'
 import Gist from '../utils/gist'
+import GistManager from './Gist'
 import {
 	BackgroundEvent,
 	BookMarks,
@@ -14,9 +15,11 @@ import { traverseTree } from './diffTree'
 export default class BookMark {
 	localBookMark: MyBookMark = { bookmarks: [] }
 	remoteBookMark: MyBookMark = { bookmarks: [] }
+	gistManager: GistManager
 	constructor(readonly initedData: MsgInitedData) {
 		//初始化axios
 		Api.setAccessToken(initedData.accessToken)
+		this.gistManager = new GistManager({ accessToken: initedData.accessToken })
 	}
 	async hasDiff() {
 		await this.setLocalBookMark()
@@ -65,16 +68,17 @@ export default class BookMark {
 	}
 	//设置remoteBookMark，从远端获取
 	async setRemoteBookmark() {
-		const bookmarks = (await Gist.fetch()) as MyBookMark
-		this.remoteBookMark = bookmarks
+		await this.gistManager.readyPromise
+		const bookmarks = this.gistManager.getMyBookMark()
+		this.remoteBookMark = cloneDeep(bookmarks)
+	}
+	async updateRemoteBookmark(bookmarks: MyBookMark) {
+		await this.gistManager.readyPromise
+		this.gistManager.setMyBookMark(cloneDeep(bookmarks))
 	}
 	async checkAccessToken() {
-		try {
-			await Gist.fetchGists()
-			return true
-		} catch (error) {
-			return false
-		}
+		await this.gistManager.readyPromise
+		return this.gistManager.checkAccessToken()
 	}
 }
 export function equalBookmark(a: MyBookMark, b: MyBookMark) {

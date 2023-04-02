@@ -105,10 +105,17 @@ chrome.runtime.onMessage.addListener(async function (
 			initedData = await initData()
 			console.log('background:initedData', initedData)
 			sendMsg(BackgroundEvent.获取初始化数据, initedData)
-			bookmarkManager = new BookMark(initedData)
-			bookmarkManagerResolve(bookmarkManager)
+			if (!bookmarkManager) {
+				bookmarkManager = new BookMark(initedData)
+				bookmarkManagerResolve(bookmarkManager)
+			}
 			break
 		case BackgroundEvent.测试功能:
+			chrome.storage.sync.get(null, function (items) {
+				console.log('chrome.storage.sync.get')
+				console.log(items)
+			})
+			chrome.storage.sync
 			bookmarkManager = await bookmarkManagerPromise
 			bookmarkManager.syncToLocal()
 			break
@@ -141,7 +148,7 @@ async function initData(): Promise<MsgInitedData> {
 		gistStatus: '未设置',
 	})
 	if (!initedData.accessToken) {
-		initedData.accessToken = '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'
+		initedData.accessToken = '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'
 	}
 	setInitedData(initedData)
 	return initedData
