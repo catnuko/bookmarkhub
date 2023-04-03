@@ -1,25 +1,21 @@
 import bookmarkUtils from '../utils/bookmark.js'
-import * as Api from '../utils/api'
 import Gist from '../utils/gist'
-import GistManager from './Gist'
-import {
-	BackgroundEvent,
-	BookMarks,
-	MyBookMark,
-	MsgInitedData,
-	sendMsg,
-} from '../type'
+import { BookMarks, MyBookMark, MsgInitedData } from '../type'
 import { cloneDeep, update } from 'lodash'
 import DiffBookMark from './DiffBookMark'
 import { traverseTree } from './diffTree'
+import { IRemoteStorage } from './MyBookMarkStorage/IStorage.js'
+import { storageFactory } from './MyBookMarkStorage/storageFactory'
+
 export default class BookMark {
 	localBookMark: MyBookMark = { bookmarks: [] }
 	remoteBookMark: MyBookMark = { bookmarks: [] }
-	gistManager: GistManager
-	constructor(readonly initedData: MsgInitedData) {
-		//初始化axios
-		Api.setAccessToken(initedData.accessToken)
-		this.gistManager = new GistManager({ accessToken: initedData.accessToken })
+	storage: IRemoteStorage
+	constructor(
+		readonly initedData: MsgInitedData,
+		storageName: string = 'local'
+	) {
+		this.storage = storageFactory(storageName)
 	}
 	async hasDiff() {
 		await this.setLocalBookMark()
@@ -39,13 +35,13 @@ export default class BookMark {
 		clearLocal(this.localBookMark)
 		this.setLocalBookMark(bookmarks)
 		createLocal(this.localBookMark)
-		await updateRemoteBookmark(this.localBookMark)
+		await this.updateRemoteBookmark(this.localBookMark)
 		await this.setRemoteBookmark()
 	}
 	//同步到远端
 	async syncToRemote(bookmarks?: BookMarks) {
 		this.setLocalBookMark(bookmarks)
-		await updateRemoteBookmark(this.localBookMark)
+		await this.updateRemoteBookmark(this.localBookMark)
 		await this.setRemoteBookmark()
 	}
 	//将远端书签同步到本地
@@ -68,17 +64,13 @@ export default class BookMark {
 	}
 	//设置remoteBookMark，从远端获取
 	async setRemoteBookmark() {
-		await this.gistManager.readyPromise
-		const bookmarks = this.gistManager.getMyBookMark()
+		await this.storage.readyPromise
+		const bookmarks = await this.storage.get()
 		this.remoteBookMark = cloneDeep(bookmarks)
 	}
 	async updateRemoteBookmark(bookmarks: MyBookMark) {
-		await this.gistManager.readyPromise
-		this.gistManager.setMyBookMark(cloneDeep(bookmarks))
-	}
-	async checkAccessToken() {
-		await this.gistManager.readyPromise
-		return this.gistManager.checkAccessToken()
+		await this.storage.readyPromise
+		this.storage.set(cloneDeep(bookmarks))
 	}
 }
 export function equalBookmark(a: MyBookMark, b: MyBookMark) {

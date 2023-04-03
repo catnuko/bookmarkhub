@@ -21,6 +21,10 @@ export enum BackgroundEvent {
 	'自动同步开关' = '自动同步开关',
 	'获取初始化数据' = '获取初始化数据',
 	'测试功能' = '测试功能',
+	'导入' = '导入',
+	'Return导入' = 'Return导入',
+	'导出' = '导出',
+	'Return导出' = 'Return导出',
 }
 export interface MyBookMark {
 	bookmarks: BookMarks

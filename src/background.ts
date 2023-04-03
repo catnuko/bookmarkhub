@@ -121,8 +121,19 @@ chrome.runtime.onMessage.addListener(async function (
 			break
 		case BackgroundEvent.CheckAccessToken:
 			bookmarkManager = await bookmarkManagerPromise
-			let res = await bookmarkManager.checkAccessToken()
+			let res = true
+			if (bookmarkManager.storage.checkTokenValid) {
+				res = await bookmarkManager.storage.checkTokenValid()
+			}
 			sendMsg(BackgroundEvent.ReturnCheckAccessToken, res)
+			break
+		case BackgroundEvent.导入:
+			bookmarkManager = await bookmarkManagerPromise
+			sendMsg(BackgroundEvent.Return导入, true)
+			break
+		case BackgroundEvent.导出:
+			bookmarkManager = await bookmarkManagerPromise
+			sendMsg(BackgroundEvent.Return导出, true)
 			break
 		default:
 			break
@@ -153,25 +164,3 @@ async function initData(): Promise<MsgInitedData> {
 	setInitedData(initedData)
 	return initedData
 }
-
-// // 获取所有 tab
-// const pups = chrome.extension.getViews({
-//     type: 'popup'
-// }) || []
-
-// // 输出第一个使用插件页面的url
-// if (pups.length) {
-//     console.log(pups[0].location.href)
-// }
-
-// // 获取当前激活的tab
-// chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
-// 	console.log('bg:tabs')
-// 	console.log(tabs)
-// 	// 发送消息到当前tab
-// 	if (tabs[0]?.id) {
-// 		chrome.tabs.sendMessage(tabs[0].id, {
-// 			greeting: 'Hello from background!',
-// 		})
-// 	}
-// })

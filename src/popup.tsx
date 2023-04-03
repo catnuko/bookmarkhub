@@ -81,7 +81,17 @@ const Popup = () => {
 				chrome.runtime.sendMessage({
 					type: BackgroundEvent.测试功能,
 				})
-
+			case '导出':
+				chrome.runtime.sendMessage({
+					type: BackgroundEvent.导出,
+				})
+				break
+			case '导入':
+				chrome.runtime.sendMessage({
+					type: BackgroundEvent.导入,
+				})
+				break
+			default:
 				break
 		}
 	}
@@ -135,29 +145,27 @@ const Popup = () => {
 						onChange={onAutoSyncChange}
 					/>
 				</li>
-				{/* <li className="flex items-center justify-between w-full p-2 cursor-pointer duration-300 rounded hover:bg-purple-800 hover:text-white">
+				<li className="flex items-center justify-start w-full p-2 cursor-pointer duration-300 rounded hover:bg-purple-800 hover:text-white">
+					<Icon
+						icon="material-symbols:home-storage-outline"
+						className="w-6 h-6 mr-5"
+					></Icon>
+					<select
+						id="country"
+						name="country"
+						autoComplete="country-name"
+						className="block w-full rounded-md text-base border-0 p-1 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:max-w-xs sm:text-sm sm:leading-6"
+					>
+						<option>本地存储</option>
+						<option>Github Gist</option>
+					</select>
+				</li>
+				<li className="flex items-center justify-between w-full p-2 cursor-pointer duration-300 rounded hover:bg-purple-800 hover:text-white">
 					<div className="flex items-center justify-between">
 						<Icon
-							icon="material-symbols:astrophotography-auto"
-							className="w-6 h-6 mr-5"
-						></Icon>
-						<select
-							id="country"
-							name="country"
-							autoComplete="country-name"
-							className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:max-w-xs sm:text-sm sm:leading-6"
+							icon="material-symbols:generating-tokens-outline"
+							className="mr-5 w-6 h-6"
 						>
-							<option>按本地同步</option>
-							<option>按远程同步</option>
-						</select>
-					</div>
-				</li> */}
-				<li
-					className="flex items-center justify-between w-full p-2 cursor-pointer duration-300 rounded hover:bg-purple-800 hover:text-white"
-					onClick={e => clickItem('设置')}
-				>
-					<div className="flex items-center justify-between">
-						<Icon icon="ep:setting" className="mr-5 w-6 h-6">
 							Github AccessToken
 						</Icon>
 						<input
@@ -173,11 +181,29 @@ const Popup = () => {
 					{accessTokenStatus ? (
 						<Icon icon={SUCCESS} />
 					) : (
-						<div className='flex items-center justify-start'>
-							<Icon icon={ERROR} className="mr-1 w-6 h-6"/>
+						<div className="flex items-center justify-start">
+							<Icon icon={ERROR} className="mr-1 w-6 h-6" />
 							<span>AccessToken非法</span>
 						</div>
 					)}
+				</li>
+				<li
+					className="flex items-center justify-between w-full p-2 cursor-pointer duration-300 rounded hover:bg-purple-800 hover:text-white"
+					onClick={e => clickItem('导出')}
+				>
+					<div className="flex items-center justify-between">
+						<Icon icon="ph:export-light" className="w-6 h-6 mr-5"></Icon>
+						<span className="text-base ">导出</span>
+					</div>
+				</li>
+				<li
+					className="flex items-center justify-between w-full p-2 cursor-pointer duration-300 rounded hover:bg-purple-800 hover:text-white"
+					onClick={e => clickItem('导入')}
+				>
+					<div className="flex items-center justify-between">
+						<Icon icon="uil:import" className="w-6 h-6 mr-5"></Icon>
+						<span className="text-base ">导入</span>
+					</div>
 				</li>
 				<li
 					className="flex items-center justify-start w-full p-2 cursor-pointer duration-300 rounded hover:bg-purple-800 hover:text-white"
